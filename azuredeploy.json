@@ -14,35 +14,16 @@
   "variables": {
     "namingInfix": "[toLower(substring(concat(parameters('namePrefix'), uniqueString(resourceGroup().id)), 0, 9))]",
     "location": "[resourceGroup().location]",
-    "docDbName": "[concat(variables('namingInfix'), 'db')]",
     "funcName": "[concat(variables('namingInfix'), 'func')]",
     "funcStorageAccountName": "[concat(variables('namingInfix'), 'funcsa')]",
     "funcStorageAccountId": "[resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageAccountName'))]",
     "funcHostingPlanName": "[concat(variables('namingInfix'), 'asp')]",
     "funcStorageAccountType": "Standard_LRS",
-    "pythonExtension": "python2713x64",
+    "pythonExtension": "python362x86",
     "repoUrl": "https://github.com/meken/azure-functions-python.git",
     "repoBranch": "master"
   },
   "resources": [
-    {
-      "name": "[variables('docDbName')]",
-      "type": "Microsoft.DocumentDB/databaseAccounts",
-      "apiVersion": "2015-04-08",
-      "location": "[variables('location')]",
-      "kind": "GlobalDocumentDB",
-      "tags": {},
-      "properties": {
-        "databaseAccountOfferType": "Standard",
-        "consistencyPolicy": {
-          "defaultConsistencyLevel": "Session",
-          "maxIntervalInSeconds": 5,
-          "maxStalenessPrefix": 100
-        },
-        "name": "[variables('docDbName')]"
-      },
-      "dependsOn": []
-    },
     {
       "name": "[variables('funcStorageAccountName')]",
       "type": "Microsoft.Storage/storageAccounts",
@@ -75,9 +56,9 @@
         "siteConfig": {
           "handlerMappings": [
             {
-              "arguments": "D:\\home\\Python27\\wfastcgi.py",
+              "arguments": "D:\\home\\Python362x86\\wfastcgi.py",
               "extension": "fastCgi",
-              "scriptProcessor": "D:\\home\\Python27\\python.exe"
+              "scriptProcessor": "D:\\home\\Python362x86\\python.exe"
             }
           ],
           "appSettings": [
@@ -100,14 +81,6 @@
             {
               "name": "AzureWebJobsDashboard",
               "value": "[concat('DefaultEndpointsProtocol=https;AccountName=',variables('funcStorageAccountName'),';AccountKey=',listkeys(variables('funcStorageAccountId'),'2015-05-01-preview').key1)]"
-            },
-            {
-              "name": "DOCDB_HOST",
-              "value": "[concat('https://',variables('docDbName'),'.documents.azure.com:443/')]"
-            },
-            {
-              "name": "DOCDB_KEY",
-              "value": "[listkeys(variables('docDbName'), '2015-04-08').primaryMasterKey]"
             }
           ]
         }
@@ -121,26 +94,11 @@
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', variables('funcName'))]"
           ]
-        },
-        {
-          "name": "web",
-          "type": "sourcecontrols",
-          "apiVersion": "2015-08-01",
-          "properties": {
-            "repoUrl": "[variables('repoUrl')]",
-            "branch": "[variables('repoBranch')]",
-            "isManualIntegration": true
-          },
-          "dependsOn": [
-            "[resourceId('Microsoft.Web/sites', variables('funcName'))]",
-            "[resourceId('Microsoft.Web/sites/siteextensions', variables('funcName'), variables('pythonExtension'))]"
-          ]
         }
       ],
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('funcHostingPlanName'))]",
-        "[resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageAccountName'))]",
-        "[resourceId('Microsoft.DocumentDB/databaseAccounts', variables('docDbName'))]"
+        "[resourceId('Microsoft.Storage/storageAccounts', variables('funcStorageAccountName'))]"
       ]
     }
   ]
